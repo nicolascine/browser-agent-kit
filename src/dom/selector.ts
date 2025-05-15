@@ -119,7 +119,7 @@ function tryFuzzyMatch(description: string, root: Element): SelectorResult | nul
   if (bestMatch) {
     return {
       element: bestMatch,
-      confidence: bestScore * 0.6, // fuzzy is less confident
+      confidence: bestScore * 0.5, // toned down - was matching too eagerly
       strategy: 'fuzzy',
       path: generatePath(bestMatch),
     }
