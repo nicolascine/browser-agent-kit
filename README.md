@@ -1,18 +1,28 @@
 # browser-agent-kit
 
-A toolkit for building AI agents that operate inside the browser.
+Build AI agents that run **inside** the browser — same page, same DOM, real context.
 
-## What is this
+> Most agent frameworks control a browser from the outside (Puppeteer, Playwright). This toolkit lets you build agents that operate from within. Different tradeoffs, different use cases.
 
-Browser automation usually means Puppeteer/Playwright running headless from Node. But what if the agent runs *inside* the browser itself? Same page, same context, real DOM access.
+## How it works
 
-browser-agent-kit gives you the building blocks:
-- **DOM analysis**: Snapshot the page, extract accessibility tree, track mutations
-- **Smart selection**: Find elements by CSS, ARIA labels, text content, or fuzzy matching
-- **Actions**: Click, type, navigate - with a registry for custom actions
-- **Planning**: Give the agent a goal in natural language, it figures out the steps
+```
+                    ┌──────────────────────┐
+                    │     BrowserAgent      │
+                    └──────────┬───────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                 │
+     ┌────────▼──────┐ ┌──────▼──────┐ ┌───────▼───────┐
+     │  DOM Analysis  │ │   Actions    │ │    Planner    │
+     │  - snapshot    │ │  - click     │ │  - strategies │
+     │  - a11y tree   │ │  - type      │ │  - LLM-based  │
+     │  - mutations   │ │  - navigate  │ │  - replanning │
+     │  - selector    │ │  - (custom)  │ │               │
+     └───────────────┘ └─────────────┘ └───────────────┘
+```
 
-The agent uses an LLM (you bring your own) to understand the page and plan actions. It serializes the page into a compact text representation that fits in context windows.
+The key insight: LLMs don't need the full DOM. They need a **semantic** view — like what a screen reader sees. We extract the accessibility tree, filter to interactive elements, and serialize it as structured text. A 50KB DOM becomes ~2-4KB of context.
 
 ## Install
 
@@ -20,90 +30,80 @@ The agent uses an LLM (you bring your own) to understand the page and plan actio
 npm install browser-agent-kit
 ```
 
-## Quick start
+## Usage
 
 ```typescript
 import { BrowserAgent } from 'browser-agent-kit'
 
 const agent = new BrowserAgent({
   llmCall: async (prompt) => {
-    // call your LLM here (OpenAI, Anthropic, local, etc)
-    return await yourLLMFunction(prompt)
+    // bring your own LLM (OpenAI, Anthropic, local, whatever)
+    return await callYourLLM(prompt)
   },
-  verbose: true,
 })
 
-// tell it what to do in natural language
-await agent.run('Click the "Sign In" button, fill in email and password, then submit')
+await agent.run('Fill the contact form with name "Nico" and email "hi@nico.cl", then submit')
 ```
 
-## How it works
-
-1. Agent captures the page state (accessibility tree + interactive elements)
-2. Serializes it into a compact text format for the LLM
-3. LLM generates a plan (sequence of actions)
-4. Agent executes each action, monitoring DOM changes
-5. If something fails, it can re-plan (WIP)
-
-## Page serialization
-
-The key insight is that LLMs don't need the full DOM. They need a *semantic* view of the page - similar to what screen readers see. We extract the accessibility tree, filter to interactive elements, and format it as structured text.
-
-This typically compresses a 50KB DOM into ~2-4KB of context.
+The agent will:
+1. Capture the page's accessibility tree
+2. Identify interactive elements (inputs, buttons, links)
+3. Ask the LLM to plan a sequence of actions
+4. Execute each action, monitoring DOM changes between steps
 
 ## Custom actions
 
+The built-in actions (click, type, navigate) cover basics. Register your own:
+
 ```typescript
-import { BrowserAgent } from 'browser-agent-kit'
-
-const agent = new BrowserAgent({ llmCall: myLLM })
-
 agent.registerAction({
   name: 'scroll_down',
-  description: 'Scroll the page down',
+  description: 'Scroll the page down by one viewport',
   parameters: [],
   execute: async () => {
-    window.scrollBy(0, 500)
-    return { success: true, message: 'Scrolled down' }
+    window.scrollBy(0, window.innerHeight)
+    return { success: true, message: 'Scrolled' }
   }
 })
 ```
 
-## Architecture
+The action registry generates descriptions for the LLM automatically, so the planner knows what's available.
 
-```
-BrowserAgent
-├── ActionRegistry (built-in + custom actions)
-├── ActionPlanner (LLM-based planning)
-├── DOMObserver (mutation tracking)
-└── Serializer
-    ├── DOMSnapshot (raw DOM tree)
-    └── A11yTree (accessibility view)
-```
+## Smart element selection
 
-## Limitations
+Finding elements by CSS selectors is fragile. The selector module tries multiple strategies in order:
 
-- Runs in browser context only (no Node.js / headless)
-- No cross-origin navigation
-- Planning quality depends on your LLM
-- Doesn't handle iframes yet
-- No screenshot/vision support (text-only page understanding)
+1. **CSS** — direct selector match
+2. **ARIA** — search by aria-label, role, name
+3. **Text** — match by visible text content
+4. **Fuzzy** — word-level matching with confidence scoring
 
-## Why not just use Puppeteer?
+Each result includes a confidence score. The agent uses the highest-confidence match.
 
-Different use case. Puppeteer controls a browser from outside. This operates from inside - useful for:
-- Browser extensions that need AI capabilities
-- In-page AI assistants
-- Testing tools that need semantic understanding
-- Accessibility auditing with AI analysis
+## Status
 
-## TODO
+This is actively being developed. Core DOM analysis and action execution work well. The planner is functional but basic — it doesn't re-plan on failure yet (it just stops). The smart selector handles most cases but struggles with highly dynamic SPAs.
 
+What's working:
+- [x] DOM snapshot and serialization
+- [x] Accessibility tree extraction
+- [x] Action registry and execution
+- [x] LLM-based planning
+- [x] Mutation tracking
+
+What's next:
 - [ ] Re-planning on action failure
-- [ ] Screenshot support for vision models
+- [ ] Screenshot support (for vision models)
 - [ ] iframe handling
 - [ ] Session recording/replay
-- [ ] More built-in actions (scroll, select, drag)
+
+## Why not Puppeteer?
+
+Puppeteer/Playwright control a browser from outside. browser-agent-kit runs inside. Use this when:
+- Building a browser extension with AI
+- Adding an AI assistant to your web app
+- Running agents in existing browser sessions
+- Need same-origin access without proxying
 
 ## License
 
