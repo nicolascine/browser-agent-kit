@@ -3,7 +3,9 @@
  * designed for agent use: find the "best" match even with fuzzy descriptions
  */
 
-export type SelectorStrategy = 'css' | 'text' | 'aria' | 'fuzzy'
+import { groundByIntent } from './intent'
+
+export type SelectorStrategy = 'css' | 'text' | 'aria' | 'intent' | 'fuzzy'
 
 export interface SelectorResult {
   element: Element
@@ -20,6 +22,7 @@ export function findElement(
   const strategies: Array<() => SelectorResult | null> = [
     () => tryCSSSelector(description, root),
     () => tryAriaSelector(description, root),
+    () => tryIntentMatch(description, root),
     () => tryTextMatch(description, root),
     () => tryFuzzyMatch(description, root),
   ]
@@ -71,6 +74,17 @@ function tryAriaSelector(description: string, root: Element): SelectorResult | n
   }
 
   return null
+}
+
+function tryIntentMatch(description: string, root: Element): SelectorResult | null {
+  const m = groundByIntent(description, root)
+  if (!m) return null
+  return {
+    element: m.element,
+    confidence: 0.8,
+    strategy: 'intent',
+    path: generatePath(m.element),
+  }
 }
 
 function tryTextMatch(description: string, root: Element): SelectorResult | null {

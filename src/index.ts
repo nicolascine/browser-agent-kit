@@ -6,6 +6,8 @@ export { captureSnapshot } from './dom/snapshot'
 export type { DOMSnapshot, ElementNode, InteractiveElement } from './dom/snapshot'
 export { findElement } from './dom/selector'
 export type { SelectorResult, SelectorStrategy } from './dom/selector'
+export { groundByIntent, intentsOf } from './dom/intent'
+export type { IntentMatch } from './dom/intent'
 export { DOMObserver } from './dom/observer'
 export type { DOMChange } from './dom/observer'
 
