@@ -24,7 +24,8 @@
     "dev": "esbuild src/index.ts --bundle --format=esm --platform=neutral --outfile=dist/index.js --watch",
     "demo": "tsx examples/demo.ts",
     "demo:cl": "tsx examples/demo-cl.ts",
-    "record:pro": "node examples/record-pro.mjs"
+    "record:pro": "node examples/record-pro.mjs",
+    "demo:codeact": "tsx experiments/codeact/run.ts"
   },
   "keywords": [
     "ai",
