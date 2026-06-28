@@ -27,7 +27,8 @@
     "record:pro": "node examples/record-pro.mjs",
     "demo:codeact": "tsx experiments/codeact/run.ts",
     "demo:grounding": "node experiments/codeact/ground-browser.mjs",
-    "demo:lexical": "tsx experiments/codeact/lexical-demo.ts"
+    "demo:lexical": "tsx experiments/codeact/lexical-demo.ts",
+    "demo:property": "node experiments/property/providencia.mjs"
   },
   "keywords": [
     "ai",
