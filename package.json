@@ -25,7 +25,8 @@
     "demo": "tsx examples/demo.ts",
     "demo:cl": "tsx examples/demo-cl.ts",
     "record:pro": "node examples/record-pro.mjs",
-    "demo:codeact": "tsx experiments/codeact/run.ts"
+    "demo:codeact": "tsx experiments/codeact/run.ts",
+    "demo:grounding": "node experiments/codeact/ground-browser.mjs"
   },
   "keywords": [
     "ai",
@@ -38,6 +39,7 @@
   "author": "Nicolás Silva",
   "license": "MIT",
   "devDependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "esbuild": "^0.28.1",
     "jsdom": "^24.1.0",
     "playwright-core": "^1.61.1",
