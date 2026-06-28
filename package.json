@@ -28,7 +28,7 @@
     "demo:codeact": "tsx experiments/codeact/run.ts",
     "demo:grounding": "node experiments/codeact/ground-browser.mjs",
     "demo:lexical": "tsx experiments/codeact/lexical-demo.ts",
-    "demo:property": "node experiments/property/providencia.mjs"
+    "demo:property": "node experiments/property/providencia-agent.mjs"
   },
   "keywords": [
     "ai",
