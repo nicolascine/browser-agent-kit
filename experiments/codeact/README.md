@@ -118,3 +118,18 @@ you can see *why* it matched (`[help]`, `[training]`).
 **Takeaway:** structure = RFC rules (free) · common intents = KB lexicon (free) ·
 long-tail meaning = tiny distilled model · novel reasoning = the LLM. The 300MB–1GB
 general model was the wrong tool for a bounded problem.
+
+---
+
+## Experiment 4: live run on real mercadopublico.cl (`mp-live.mjs`)
+
+Drives the real site with Playwright (read-only public search), with a process HUD.
+The search + navigation steps run reliably and are recorded — but the results
+component frequently **renders empty under headless automation** (anti-bot / SPA
+session state). When it does render, tenders are real (e.g. *"Adquisición de
+notebooks para la U. de Santiago · $17.420.000"*).
+
+**The honest finding doubles as the thesis:** an *external headless bot* gets served
+an empty page; an agent living *inside the user's real, non-headless, authenticated
+session* — which is exactly what this kit is for — never hits that wall. The fragility
+of outside-in automation is the argument for inside-the-page agents.
