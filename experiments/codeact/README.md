@@ -77,5 +77,44 @@ usuario"* → *Centro de Ayuda*):
 **The realistic design is therefore hybrid — narrow-then-verify:** embeddings cut
 56 elements → top-3 locally (cheap), then the agent *acts on the top candidate and
 checks the accessibility-diff* (or asks the LLM to pick from 3). Local narrows; a
-cheap verify confirms. Pure-local top-1 needs a bigger model (e5-base / bge-m3, a
-~300MB–1GB download) — a real size/quality tradeoff to decide deliberately.
+cheap verify confirms.
+
+---
+
+## Experiment 3: a bounded lexicon beats the 135MB model (`lexical-demo.ts`)
+
+Why reach for a 300MB–1GB model to "understand HTML"? **Structure is already
+deterministic (WHATWG/W3C spec) — no model needed.** The only non-structural bit is
+mapping a human description to a human label, and **web actions are a near-closed set**
+(login, register, search, help, cart, submit, …). So map both sides onto a small
+intent lexicon (es/en) and match by intent. No model, no download, KB-sized, auditable.
+
+```bash
+npm run demo:lexical   # pure JS, runs in jsdom, instant
+```
+
+### Head-to-head (same 5 cases, same candidates)
+
+| approach | size | download | top-1 | top-3 |
+|----------|------|----------|-------|-------|
+| fuzzy (current selector) | — | no | 0/5 | 0/5 |
+| embeddings (`multilingual-e5-small` q8) | ~120 MB | yes | 1/5 | 3/5 |
+| **bounded lexicon (es/en intents)** | **~KB** | **no** | **5/5** | **5/5** |
+
+The lexicon wins because intent tags give **clean separation** (`login` ≠ `register`)
+where e5 compressed every score to ~0.85. It's also deterministic and debuggable —
+you can see *why* it matched (`[help]`, `[training]`).
+
+**Honest caveats:**
+
+- The lexicon is hand-authored and tested on cases the author could anticipate — a
+  favorable setup. Real validation needs held-out descriptions and many more sites.
+- It covers **bounded, common** intents. Truly novel/free-form phrasing outside the
+  lexicon is the long tail → fall back to a small **distilled** embedder (~5–15 MB,
+  not 300 MB+) or let the LLM pick from the lexicon's top-k.
+- Combined with **act + a11y-diff verification**, the grounder doesn't need to be
+  perfect — it just needs the right element in its top few.
+
+**Takeaway:** structure = RFC rules (free) · common intents = KB lexicon (free) ·
+long-tail meaning = tiny distilled model · novel reasoning = the LLM. The 300MB–1GB
+general model was the wrong tool for a bounded problem.
